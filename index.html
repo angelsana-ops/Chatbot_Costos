@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chatbot de Costos Profesional</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #e5ddd5; display: flex; justify-content: center; padding: 20px; margin: 0; }
+    #chat-container { width: 100%; max-width: 450px; background: #fff; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+    #chat-box { flex: 1; height: 400px; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; background: #f7f7f7; border-radius: 10px 10px 0 0; }
+    .message { max-width: 80%; padding: 10px 15px; border-radius: 15px; word-wrap: break-word; }
+    .user { align-self: flex-end; background: #dcf8c6; color: #000; }
+    .bot { align-self: flex-start; background: #fff; border: 1px solid #ccc; color: #000; }
+    #input-container { display: flex; padding: 10px; background: #eee; border-radius: 0 0 10px 10px; flex-wrap: wrap; gap: 5px; }
+    #user-input { flex: 1 1 60%; padding: 10px; border-radius: 20px; border: 1px solid #ccc; }
+    #send-btn { padding: 10px 20px; border-radius: 20px; border: none; background: #4caf50; color: #fff; cursor: pointer; flex: 1 1 35%; }
+    #questions { padding: 10px; display: flex; flex-direction: column; gap: 5px; }
+    .question-btn { padding: 8px; background: #e0e0e0; border: none; border-radius: 10px; cursor: pointer; }
+    #calc-form { display: flex; flex-direction: column; gap: 5px; padding: 10px; background: #f0f0f0; border-radius: 10px; margin-bottom: 10px; }
+    #calc-form input { padding: 5px; border-radius: 5px; border: 1px solid #ccc; }
+    #calc-form select { padding: 5px; border-radius: 5px; border: 1px solid #ccc; }
+    #calc-form button { padding: 5px; border-radius: 5px; border: none; background: #2196f3; color: #fff; cursor: pointer; }
+    @media (max-width: 500px){
+        #chat-box { height: 350px; }
+        #user-input, #send-btn { flex: 1 1 100%; }
+    }
+</style>
+</head>
+<body>
+
+<div id="chat-container">
+    <div id="chat-box"></div>
+
+    <div id="questions">
+        <strong>Preguntas teóricas:</strong>
+        <button class="question-btn" onclick="sendQuestion('Qué es FIFO?')">Qué es FIFO?</button>
+        <button class="question-btn" onclick="sendQuestion('Qué es LIFO?')">Qué es LIFO?</button>
+        <button class="question-btn" onclick="sendQuestion('Qué es PPP?')">Qué es PPP?</button>
+        <button class="question-btn" onclick="sendQuestion('Tipos de costos')">Tipos de costos</button>
+    </div>
+
+    <div id="calc-form">
+        <strong>Hacer cálculo:</strong>
+        <input type="text" id="cantidades" placeholder="Cantidades separadas por coma: 10,5">
+        <input type="text" id="precios" placeholder="Precios separados por coma: 5,6">
+        <select id="metodo">
+            <option value="FIFO">FIFO</option>
+            <option value="LIFO">LIFO</option>
+            <option value="PPP">PPP</option>
+        </select>
+        <button onclick="calculateCost()">Calcular</button>
+    </div>
+
+    <div id="input-container">
+        <input type="text" id="user-input" placeholder="Escribí un mensaje...">
+        <button id="send-btn">Enviar</button>
+    </div>
+</div>
+
+<script>
+const chatBox = document.getElementById('chat-box');
+const userInput = document.getElementById('user-input');
+const sendBtn = document.getElementById('send-btn');
+
+const theoreticalAnswers = {
+    "Qué es FIFO?": "FIFO (First In, First Out) significa que los primeros productos comprados son los primeros en venderse o consumirse.",
+    "Qué es LIFO?": "LIFO (Last In, First Out) significa que los últimos productos comprados son los primeros en venderse o consumirse.",
+    "Qué es PPP?": "PPP (Promedio Ponderado de Productos) calcula el costo promedio de los productos en inventario considerando cantidad y precio.",
+    "Tipos de costos": "Los costos se clasifican en: fijos, variables, directos, indirectos, semivariables, entre otros."
+};
+
+function appendMessage(sender, text){
+    const msg = document.createElement('div');
+    msg.classList.add('message', sender);
+    msg.innerText = text;
+    chatBox.appendChild(msg);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+function sendQuestion(question){
+    appendMessage('user', question);
+    appendMessage('bot', theoreticalAnswers[question]);
+}
+
+function calculateFIFO(cantidades, precios){
+    let total = 0;
+    for(let i=0;i<cantidades.length;i++) total += cantidades[i]*precios[i];
+    return `Costo total (FIFO) = ${total}`;
+}
+
+function calculateLIFO(cantidades, precios){
+    let total = 0;
+    for(let i=cantidades.length-1;i>=0;i--) total += cantidades[i]*precios[i];
+    return `Costo total (LIFO) = ${total}`;
+}
+
+function calculatePPP(cantidades, precios){
+    let totalCantidad = cantidades.reduce((a,b)=>a+b,0);
+    let totalCosto = cantidades.reduce((sum,c,i)=>sum+c*precios[i],0);
+    let promedio = totalCosto/totalCantidad;
+    return `Costo promedio ponderado (PPP) = ${promedio.toFixed(2)}`;
+}
+
+function calculateCost(){
+    const cantText = document.getElementById('cantidades').value;
+    const precText = document.getElementById('precios').value;
+    const metodo = document.getElementById('metodo').value;
+
+    const cantidades = cantText.split(',').map(x=>parseFloat(x.trim()));
+    const precios = precText.split(',').map(x=>parseFloat(x.trim()));
+
+    if(cantidades.length !== precios.length){
+        appendMessage('bot','Error: la cantidad de precios y cantidades debe coincidir.');
+        return;
+    }
+
+    appendMessage('user',`Cálculo: ${metodo} | Cantidades: ${cantText} | Precios: ${precText}`);
+
+    let result;
+    switch(metodo){
+        case 'FIFO': result = calculateFIFO(cantidades, precios); break;
+        case 'LIFO': result = calculateLIFO(cantidades, precios); break;
+        case 'PPP': result = calculatePPP(cantidades, precios); break;
+    }
+
+    appendMessage('bot', result);
+}
+
+sendBtn.addEventListener('click', ()=>{
+    const message = userInput.value.trim();
+    if(!message) return;
+
+    appendMessage('user', message);
+
+    // buscar teoría
+    let found=false;
+    for(let key in theoreticalAnswers){
+        if(message.toLowerCase().includes(key.toLowerCase())){
+            appendMessage('bot', theoreticalAnswers[key]);
+            found=true;
+            break;
+        }
+    }
+    if(!found) appendMessage('bot',"No entendí, podés elegir una pregunta de la lista o usar el formulario de cálculo.");
+
+    userInput.value='';
+    userInput.focus();
+});
+
+userInput.addEventListener('keypress', e=>{
+    if(e.key==='Enter') sendBtn.click();
+});
+</script>
+
+</body>
+</html>
